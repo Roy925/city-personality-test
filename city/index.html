@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>你最适合哪座城市？</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+  :root {
+    --red: #FF2442;
+    --light-red: #FFE6E6;
+    --dark: #333333;
+    --gray: #F5F5F5;
+    --mid-gray: #888;
+    --white: #fff;
+    --green: #34C759;
+    --yellow: #FF9500;
+    --shadow: 0 4px 24px rgba(255,36,66,0.10);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: #fafafa;
+    color: var(--dark);
+    min-height: 100vh;
+  }
+
+  /* COVER */
+  #cover {
+    min-height: 100vh;
+    background: linear-gradient(160deg, #fff 0%, #FFE6E6 60%, #FF2442 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #cover::before {
+    content: '城市';
+    position: absolute;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 200px;
+    color: rgba(255,36,66,0.06);
+    font-weight: 700;
+    letter-spacing: -10px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .cover-emoji {
+    font-size: 64px;
+    margin-bottom: 24px;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+
+  #cover h1 {
+    font-family: 'Noto Serif SC', serif;
+    font-size: clamp(26px, 7vw, 38px);
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 12px;
+    line-height: 1.3;
+  }
+
+  #cover h1 span { color: var(--red); }
+
+  #cover p {
+    font-size: 15px;
+    color: #666;
+    margin-bottom: 40px;
+    max-width: 320px;
+    line-height: 1.7;
+  }
+
+  .start-btn {
+    background: var(--red);
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    padding: 16px 52px;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 8px 28px rgba(255,36,66,0.35);
+    transition: all 0.2s;
+    font-family: 'Noto Sans SC', sans-serif;
+    letter-spacing: 2px;
+  }
+
+  .start-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(255,36,66,0.45); }
+  .start-btn:active { transform: scale(0.97); }
+
+  .cover-note {
+    margin-top: 20px;
+    font-size: 12px;
+    color: #aaa;
+  }
+
+  /* QUIZ */
+  #quiz {
+    display: none;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0 0 40px;
+    min-height: 100vh;
+  }
+
+  .quiz-header {
+    background: #fff;
+    padding: 20px 24px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .quiz-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .quiz-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--red);
+    letter-spacing: 1px;
+  }
+
+  .quiz-count {
+    font-size: 13px;
+    color: var(--mid-gray);
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 5px;
+    background: var(--light-red);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #FF2442, #FF6B8A);
+    border-radius: 10px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  .question-card {
+    padding: 28px 24px 20px;
+  }
+
+  .question-num {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--red);
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+
+  .question-text {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.6;
+    color: var(--dark);
+    margin-bottom: 24px;
+  }
+
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .option {
+    background: #fff;
+    border: 2px solid #f0f0f0;
+    border-radius: 16px;
+    padding: 14px 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: all 0.2s;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--dark);
+  }
+
+  .option:hover {
+    border-color: #FFB3BE;
+    background: #FFF5F6;
+    transform: translateX(3px);
+  }
+
+  .option.selected {
+    border-color: var(--red);
+    background: #FFF0F2;
+    color: var(--red);
+    font-weight: 500;
+  }
+
+  .option.selected .opt-label {
+    background: var(--red);
+    color: #fff;
+  }
+
+  .opt-label {
+    min-width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #999;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  /* RESULT */
+  #result {
+    display: none;
+    max-width: 480px;
+    margin: 0 auto;
+    padding-bottom: 60px;
+  }
+
+  .result-hero {
+    background: linear-gradient(160deg, var(--red) 0%, #FF6B8A 100%);
+    color: #fff;
+    padding: 48px 24px 40px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .result-hero::before {
+    content: '';
+    position: absolute;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+    top: -80px; right: -80px;
+  }
+
+  .result-hero::after {
+    content: '';
+    position: absolute;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    bottom: -60px; left: -40px;
+  }
+
+  .result-label {
+    font-size: 12px;
+    letter-spacing: 3px;
+    opacity: 0.8;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .result-city {
+    font-family: 'Noto Serif SC', serif;
+    font-size: clamp(42px, 12vw, 60px);
+    font-weight: 700;
+    margin-bottom: 4px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .result-subtitle {
+    font-size: 13px;
+    opacity: 0.85;
+    margin-bottom: 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .result-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .tag {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    padding: 5px 14px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 500;
+    backdrop-filter: blur(4px);
+  }
+
+  .result-desc {
+    background: #fff;
+    margin: 0 16px;
+    border-radius: 20px;
+    padding: 24px 20px;
+    margin-top: -20px;
+    box-shadow: var(--shadow);
+    position: relative;
+    z-index: 5;
+  }
+
+  .result-desc-title {
+    font-size: 12px;
+    color: var(--red);
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+
+  .result-desc-text {
+    font-size: 14px;
+    line-height: 1.9;
+    color: #444;
+  }
+
+  .personality-section {
+    padding: 24px 16px 8px;
+  }
+
+  .section-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .personality-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pbar-item {
+    background: #fff;
+    border-radius: 12px;
+    padding: 12px 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  }
+
+  .pbar-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+
+  .pbar-name { font-weight: 600; }
+  .pbar-val { color: var(--red); font-weight: 700; }
+
+  .pbar-track {
+    height: 6px;
+    background: #f0f0f0;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .pbar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--red), #FF6B8A);
+    border-radius: 10px;
+    transition: width 1s ease;
+  }
+
+  .other-cities-section {
+    padding: 8px 16px;
+  }
+
+  .city-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .city-rank {
+    min-width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--gray);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--mid-gray);
+    flex-shrink: 0;
+  }
+
+  .city-card.rank-2 .city-rank { background: linear-gradient(135deg, #FF2442, #FF6B8A); color: #fff; }
+  .city-card.rank-3 .city-rank { background: linear-gradient(135deg, #FF9500, #FFD166); color: #fff; }
+
+  .city-info { flex: 1; }
+
+  .city-name {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 4px;
+  }
+
+  .city-dims {
+    font-size: 11px;
+    color: var(--mid-gray);
+    margin-bottom: 8px;
+  }
+
+  .city-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .city-tag {
+    background: var(--light-red);
+    color: var(--red);
+    padding: 3px 10px;
+    border-radius: 50px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .match-badge {
+    padding: 3px 10px;
+    border-radius: 50px;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .match-high { background: #E8F9EF; color: var(--green); }
+  .match-mid { background: #FFF4E0; color: var(--yellow); }
+  .match-low { background: #f5f5f5; color: #999; }
+
+  .share-section {
+    padding: 16px 16px 0;
+  }
+
+  .share-title {
+    font-size: 13px;
+    color: var(--mid-gray);
+    text-align: center;
+    margin-bottom: 14px;
+  }
+
+  .share-btns {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .share-btn {
+    flex: 1;
+    max-width: 130px;
+    padding: 12px 10px;
+    border: none;
+    border-radius: 14px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Noto Sans SC', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .share-btn:active { transform: scale(0.96); }
+
+  .share-wechat { background: #07C160; color: #fff; }
+  .share-weibo { background: #E6162D; color: #fff; }
+  .share-xhs { background: #FF2442; color: #fff; }
+
+  .retry-btn {
+    display: block;
+    width: calc(100% - 32px);
+    margin: 16px auto 0;
+    padding: 14px;
+    background: var(--gray);
+    border: none;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #666;
+    cursor: pointer;
+    font-family: 'Noto Sans SC', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .retry-btn:hover { background: #eee; }
+
+  .animate-in {
+    animation: slideUp 0.4s ease both;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  @media (max-width: 480px) {
+    .question-text { font-size: 16px; }
+    .option { font-size: 13px; padding: 12px 14px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div id="cover">
+  <div class="cover-emoji">🗺️</div>
+  <h1>你最适合<br><span>哪座城市？</span></h1>
+  <p>40道题，从生活细节读懂你的性格，<br>匹配你真正的归属之城。</p>
+  <button class="start-btn" onclick="startQuiz()">开始测试</button>
+  <p class="cover-note">约需 5 分钟 · 结果不会上传</p>
+</div>
+
+<!-- QUIZ -->
+<div id="quiz">
+  <div class="quiz-header">
+    <div class="quiz-meta">
+      <span class="quiz-title">📍 城市性格测试</span>
+      <span class="quiz-count" id="quiz-count">1 / 40</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+  </div>
+  <div class="question-card" id="question-area"></div>
+</div>
+
+<!-- RESULT -->
+<div id="result"></div>
+
+<script>
+// ===== DATA =====
+const questions = [
+  {q:"工作日早餐你更倾向？",opts:["边走边吃，赶时间","去一家有氛围的小店慢慢吃","简单清爽、贴近家常","和同事一起拼单、边吃边聊","精致、有仪式感"]},
+  {q:"通勤路上你通常？",opts:["听职场/学习内容，规划工作","看文艺内容、小说、艺术资讯","看看风景、放空、发呆","和朋友聊天、刷社交动态","听轻音乐、整理形象"]},
+  {q:"午休一小时你会？",opts:["处理工作、赶进度","去书店、文创店逛逛","到户外散步、晒太阳","和同事聊天、喝奶茶","做个小护理、放松自己"]},
+  {q:"晚上回家第一件事？",opts:["处理未完成的工作","点香薰、看电影、放松","照顾绿植、宠物、回归生活","回复消息、和朋友聊天","卸妆护肤、精致保养"]},
+  {q:"周末你一般几点起？",opts:["照常早起，学习或做事","自然醒，慢慢享受","早起去户外、运动","睡晚一点，准备出门玩","早起做瑜伽、准备精致早餐"]},
+  {q:"你家装修更偏向？",opts:["极简实用、方便工作","文艺温馨、有设计感","自然原木、绿植多","适合拍照、网红感","轻奢高级、有质感"]},
+  {q:"买东西更看重？",opts:["实用、效率、性价比","设计感、独特、小众","天然、舒适、环保","热门、好看、大家都爱","品牌、质感、高品质"]},
+  {q:"选房子优先看？",opts:["离公司近、通勤短","周边有文艺氛围","绿化好、靠近自然","热闹、方便社交","高端小区、配套好"]},
+  {q:"周末最爱做的事？",opts:["学习、提升自己","看展、看话剧、逛市集","徒步、露营、亲近自然","探店、聚会、玩剧本杀","下午茶、SPA、享受生活"]},
+  {q:"放松时听什么音乐？",opts:["不听，专注做事","民谣、独立音乐、小众歌","自然白噪音、轻音乐","流行、热门歌曲","爵士、古典、高级感音乐"]},
+  {q:"旅行你更喜欢？",opts:["顺路考察、高效行程","文艺小城、小众目的地","自然风光、山野海边","网红城市、热闹好玩","高端度假、舒适享受"]},
+  {q:"旅行钱花在哪？",opts:["交通快捷、效率优先","体验手作、当地文化","户外项目、亲近自然","网红餐厅、拍照打卡","酒店、美食、品质体验"]},
+  {q:"看电影优先选？",opts:["商业大片、有收获","文艺片、纪录片","自然、户外类影片","热门院线、和朋友一起","私人影院、氛围感"]},
+  {q:"空闲时读什么书？",opts:["职场、商业、成长","文学、艺术、小说","自然、户外、生活","社交、热门人物传记","时尚、生活方式"]},
+  {q:"你更喜欢的运动？",opts:["高效短时、燃脂","瑜伽、普拉提","户外徒步、登山","团体运动、飞盘、球类","私教、高尔夫、优雅型"]},
+  {q:"压力大时你会？",opts:["把事情做完、获得成就感","独处、创作、静心","去户外、远离城市","和朋友吐槽、大吃一顿","购物、犒劳自己"]},
+  {q:"节假日你更想？",opts:["工作/学习/提升","宅家看书、安静放松","去郊外、自然里待着","和朋友聚会、热闹","去高端酒店度假"]},
+  {q:"你常喝的饮品？",opts:["黑咖啡、提神","手冲、特色茶、小众款","鲜榨、天然、清爽","网红奶茶、果茶","红酒、精酿、高端茶饮"]},
+  {q:"工作中你最在意？",opts:["收入、成长、晋升","氛围、创意、自由","环境舒服、不压抑","同事好、关系融洽","体面、福利好、有格调"]},
+  {q:"团队里你是？",opts:["推进项目、负责结果","出创意、提想法","温和协调、让人舒服","活跃气氛、带动大家","注重细节、追求质感"]},
+  {q:"工作压力大你会？",opts:["加班搞定、不拖延","停下来做喜欢的事","出去走走、呼吸新鲜空气","找人聊天、发泄情绪","好好犒劳自己、恢复状态"]},
+  {q:"你理想的副业？",opts:["高收入、能赚钱","文创、设计、写作","户外、自然、生活类","探店、博主、社交类","高端品牌、时尚类"]},
+  {q:"朋友聚会你选哪里？",opts:["安静咖啡馆，顺便做事","文艺清吧、小众场所","户外野餐、露营","网红餐厅、轰趴馆","高端餐厅、有格调"]},
+  {q:"你更喜欢和谁做朋友？",opts:["优秀、能互相进步","有审美、同频有趣","简单、舒服、自然","开朗好玩、会社交","有品味、精致体面"]},
+  {q:"朋友约你出去？",opts:["先看是否影响工作","看活动有没有意思","看是不是户外/轻松","立刻答应、很期待","看地点和人群质量"]},
+  {q:"你用社交软件主要？",opts:["拓展人脉、找机会","看艺术、灵感、审美","看户外、旅行、自然","和朋友互动、分享日常","学穿搭、护肤、提升品味"]},
+  {q:"你理想的工作？",opts:["高薪、有前途","自由、有创意","轻松、贴近自然","好玩、认识很多人","体面、精致、有格调"]},
+  {q:"你心中好工作是？",opts:["钱多、成长快","不内卷、有氛围","环境舒服、压力小","同事友好、开心","高端、福利好、有面子"]},
+  {q:"买衣服更看重？",opts:["简约、职场、实用","设计、特别、不撞款","舒适、透气、休闲","潮流、好看、上镜","品牌、面料、高级感"]},
+  {q:"装修最愿意花钱？",opts:["书房、办公区","客厅、艺术感","阳台、庭院、绿植","打卡角、适合聚会","卧室、卫浴、高品质"]},
+  {q:"选餐厅看什么？",opts:["快、方便、性价比","氛围、特色、小众","自然、露台、舒服","网红、出片、人气高","食材、环境、档次"]},
+  {q:"护肤品你更在意？",opts:["高效、省事","小众、有机、有质感","天然、温和","网红爆款、大家推荐","大牌、效果好、贵妇线"]},
+  {q:"给朋友送礼你选？",opts:["实用办公用品","文创、艺术、小众礼物","绿植、户外小物","网红热门款","大牌香水、护肤品"]},
+  {q:"家居你最爱买？",opts:["收纳、高效工具","香薰、挂画、氛围感","绿植、自然风家居","网红摆件、拍照道具","设计师款、高级餐具"]},
+  {q:"出行方式你 prefer？",opts:["地铁、快车、高效","单车、慢慢看风景","电动车、自行车、自由","和朋友一起打车","专车、舒适有档次"]},
+  {q:"你最喜欢的装修风格？",opts:["极简、实用","复古、文艺","原木、自然","网红、ins","轻奢、高级"]},
+  {q:"你选咖啡馆看？",opts:["网速快、能办公","装修好看、有氛围","户外位、绿植多","网红、好拍照","豆子好、品质高"]},
+  {q:"买电子产品看？",opts:["性能高、办公强","设计好看、有质感","续航强、适合户外","颜值高、拍照好","高端、品牌、质感"]},
+  {q:"选健身房看？",opts:["近、方便、省时","氛围好、瑜伽普拉提","有户外、空气好","朋友多、团课有趣","高端、私教、环境好"]},
+  {q:"你心中理想生活？",opts:["事业成功、财务自由","精神富足、做喜欢的事","贴近自然、简单自在","朋友很多、热闹开心","精致舒适、品质至上"]}
+];
+
+// Scores: A=奋斗, B=文艺, C=自然, D=社交, E=精致
+const dimNames = ['奋斗型','文艺型','自然型','社交型','精致型'];
+
+const cities = [
+  {name:'北京', dims:[0,4], tags:['#帝都野心','#胡同烟火','#文化心脏'], copy:'你是野心与品味并存的实干家，北京的机遇与压力，刚好接住你对事业和体面的双重追求。白天在国贸CBD里拼杀，晚上钻进798的艺术空间喘口气，这种"奋斗里的高级感"，就是你最真实的状态。'},
+  {name:'上海', dims:[4,0], tags:['#魔都腔调','#外滩晚风','#精致搞钱'], copy:'你是精致的奋斗者，上海的繁华与高效，完美适配你"既要搞钱也要有格调"的人生剧本。在陆家嘴的摩天楼里实现财务自由，在武康路的梧桐树下喝一杯手冲，这种"高级感里的烟火气"，就是你想要的生活。'},
+  {name:'广州', dims:[0,2], tags:['#粤式烟火','#务实搞钱','#早茶自由'], copy:'你是务实又懂生活的实干派，广州的烟火气和务实感，刚好适配你"先把日子过好再谈理想"的节奏。白天在珠江新城里搞事业，晚上钻进老城区的排档里吃一顿地道粤菜，这种"接地气的奋斗感"，就是你最舒服的状态。'},
+  {name:'深圳', dims:[0,3], tags:['#搞钱圣地','#年轻气盛','#湾区脉搏'], copy:'你是敢闯敢拼的社交达人，深圳的快节奏和包容感，完美接住你"搞钱和搞人脉两不误"的野心。白天在科技园里卷项目，晚上在海岸城的清吧里拓展人脉，这种"年轻气盛的江湖气"，就是你最鲜活的底色。'},
+  {name:'杭州', dims:[1,0], tags:['#赛博江南','#诗意代码','#断桥残雪'], copy:'你是一个矛盾又迷人的综合体，既有互联网人的进取心，又有古代文人的浪漫情怀，杭州简直是为你量身定制的。左手是阿里的代码，右手是西湖的荷花。你可以在滨江的高写字楼里指点江山，下班后转身就能钻进西溪湿地吸氧。这种在"搞事业"和"搞情调"之间无缝切换的生活，精准击中了你对完美人生的定义。'},
+  {name:'成都', dims:[1,3], tags:['#巴适慢生活','#火锅江湖','#文艺巷弄'], copy:'你是懂生活的社交家，成都的慢节奏和烟火气，刚好适配你"一边享受生活一边搞社交"的松弛感。白天在宽窄巷子的茶馆里摆龙门阵，晚上在九眼桥的酒吧里微醺，这种"巴适得板"的生活，就是你想要的松弛感。'},
+  {name:'重庆', dims:[3,2], tags:['#山城立体','#火锅江湖','#雾都浪漫'], copy:'你是爱热闹又爱自由的江湖人，重庆的立体地貌和江湖气，完美接住你"既要热闹也要自在"的性格。白天在解放碑的人潮里逛吃，晚上在南山的夜景里吹晚风，这种"爬坡上坎的烟火气"，就是你最鲜活的底色。'},
+  {name:'武汉', dims:[0,3], tags:['#江湖码头','#过早文化','#大江大湖'], copy:'你是天生的奋斗者和社交家，武汉的江湖气与码头文化，完美适配你"搞钱"和"搞关系"的双重需求。白天在写字楼里拼杀，晚上在江汉路的夜市里撸串，这种"烟火气里的奋斗感"，就是你最舒服的状态。'},
+  {name:'厦门', dims:[1,2], tags:['#海风文艺','#小岛慢生活','#闽南烟火'], copy:'你是文艺的自然派，厦门的海风与文艺气息，能让你在海边找到内心的平静。在鼓浪屿的小巷里漫步，在曾厝垵的沙滩上看海，这种"文艺里的自然感"，就是你最舒服的状态。'},
+  {name:'青岛', dims:[2,4], tags:['#红瓦绿树','#啤酒海风','#滨海精致'], copy:'你是自然的精致主义者，青岛的海风与啤酒，能让你在享受自然的同时，也能保持生活的品质。在八大关的老洋房里散步，在五四广场的海边吹海风，这种"自然里的高级感"，就是你理想的生活。'},
+  {name:'大理', dims:[2,1], tags:['#避世天堂','#风花雪月','#苍山洱海'], copy:'你是自然的信徒，也是文艺的诗人。大理的风花雪月，能让你暂时逃离城市的内卷，在苍山洱海之间找到内心的平静。这里没有KPI，只有日出而作、日落而息的简单生活，是你灵魂的栖息地。'},
+  {name:'南京', dims:[1,4], tags:['#金陵底蕴','#梧桐文艺','#六朝风雅'], copy:'你是有底蕴的精致派，南京的六朝底蕴和梧桐大道，刚好适配你"既有审美又懂生活"的气质。白天在颐和路的民国建筑里漫步，晚上在老门东的巷弄里吃一碗鸭血粉丝汤，这种"金陵城里的精致感"，就是你最迷人的底色。'},
+  {name:'苏州', dims:[1,2], tags:['#园林诗意','#江南水乡','#姑苏烟火'], copy:'你是懂诗意的生活家，苏州的园林与水乡，完美接住你"既要诗意也要烟火"的向往。白天在拙政园的亭台楼阁里发呆，晚上在平江路的巷弄里听评弹，这种"江南水乡的温柔感"，就是你最治愈的状态。'},
+  {name:'西安', dims:[1,3], tags:['#长安底蕴','#夜市烟火','#十三朝魂'], copy:'你是有历史感的社交家，西安的十三朝底蕴和夜市烟火，刚好适配你"既能聊历史也能撸串"的性格。白天在兵马俑的震撼里感受历史，晚上在回民街的夜市里逛吃，这种"长安城里的江湖气"，就是你最鲜活的底色。'}
+];
+
+const LABELS = ['A','B','C','D','E'];
+let current = 0;
+let answers = new Array(40).fill(null);
+let scores = [0,0,0,0,0];
+
+function startQuiz() {
+  document.getElementById('cover').style.display = 'none';
+  document.getElementById('quiz').style.display = 'block';
+  renderQuestion(0);
+}
+
+function renderQuestion(idx) {
+  const q = questions[idx];
+  const area = document.getElementById('question-area');
+  const pct = (idx / 40) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('quiz-count').textContent = (idx + 1) + ' / 40';
+
+  area.innerHTML = `
+    <div class="question-num">Q ${String(idx+1).padStart(2,'0')}</div>
+    <div class="question-text">${q.q}</div>
+    <div class="options">
+      ${q.opts.map((opt, i) => `
+        <div class="option${answers[idx]===i?' selected':''}" onclick="selectOption(${idx},${i})" id="opt-${idx}-${i}">
+          <div class="opt-label">${LABELS[i]}</div>
+          <span>${opt}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  area.classList.remove('animate-in');
+  void area.offsetWidth;
+  area.classList.add('animate-in');
+}
+
+function selectOption(qIdx, optIdx) {
+  const prev = answers[qIdx];
+  if (prev !== null) scores[prev]--;
+  answers[qIdx] = optIdx;
+  scores[optIdx]++;
+
+  // Update UI
+  const opts = document.querySelectorAll('.option');
+  opts.forEach((o, i) => {
+    o.classList.toggle('selected', i === optIdx);
+  });
+
+  // Auto advance after short delay
+  setTimeout(() => {
+    if (qIdx < 39) {
+      current = qIdx + 1;
+      renderQuestion(current);
+    } else {
+      showResult();
+    }
+  }, 300);
+}
+
+function cityScore(city) {
+  return (scores[city.dims[0]] + scores[city.dims[1]]) / 2;
+}
+
+function showResult() {
+  document.getElementById('quiz').style.display = 'none';
+  const resultEl = document.getElementById('result');
+  resultEl.style.display = 'block';
+
+  // Rank cities
+  const ranked = [...cities].map(c => ({...c, score: cityScore(c)}))
+    .sort((a,b) => b.score - a.score);
+
+  const top = ranked[0];
+  const rest = ranked.slice(1);
+  const maxScore = ranked[0].score;
+  const minScore = ranked[ranked.length-1].score;
+  const range = maxScore - minScore || 1;
+
+  const matchLabel = (score) => {
+    const pct = (score - minScore) / range;
+    if (pct >= 0.8) return {cls:'match-high', text:'高匹配'};
+    if (pct >= 0.4) return {cls:'match-mid', text:'中匹配'};
+    return {cls:'match-low', text:'一般'};
+  };
+
+  const maxSc = 40;
+  const pbarHtml = dimNames.map((name,i) => {
+    const pct = Math.round((scores[i] / maxSc) * 100);
+    return `
+      <div class="pbar-item">
+        <div class="pbar-top"><span class="pbar-name">${name}</span><span class="pbar-val">${scores[i]}分</span></div>
+        <div class="pbar-track"><div class="pbar-fill" style="width:${pct}%"></div></div>
+      </div>`;
+  }).join('');
+
+  const otherHtml = rest.slice(0,6).map((c, i) => {
+    const m = matchLabel(c.score);
+    return `
+      <div class="city-card rank-${i+2}">
+        <div class="city-rank">${i+2}</div>
+        <div class="city-info">
+          <div class="city-name">${c.name}</div>
+          <div class="city-dims">${c.dims.map(d=>dimNames[d]).join(' · ')}</div>
+          <div class="city-tags">
+            ${c.tags.slice(0,2).map(t=>`<span class="city-tag">${t}</span>`).join('')}
+          </div>
+        </div>
+        <span class="match-badge ${m.cls}">${m.text}</span>
+      </div>`;
+  }).join('');
+
+  resultEl.innerHTML = `
+    <div class="result-hero animate-in">
+      <div class="result-label">你最适合的城市</div>
+      <div class="result-city">${top.name}</div>
+      <div class="result-subtitle">${dimNames[top.dims[0]]} × ${dimNames[top.dims[1]]}</div>
+      <div class="result-tags">
+        ${top.tags.map(t=>`<span class="tag">${t}</span>`).join('')}
+      </div>
+    </div>
+
+    <div class="result-desc animate-in">
+      <div class="result-desc-title">✦ 专属解读</div>
+      <div class="result-desc-text">${top.copy}</div>
+    </div>
+
+    <div class="personality-section animate-in">
+      <div class="section-title">📊 你的性格分布</div>
+      <div class="personality-bars">${pbarHtml}</div>
+    </div>
+
+    <div class="other-cities-section animate-in">
+      <div class="section-title">🏙️ 其他可能适合你的城市</div>
+      ${otherHtml}
+    </div>
+
+    <button class="retry-btn" onclick="retryQuiz()">🔄 重新测试</button>
+  `;
+}
+
+function shareAction(platform) {
+  const text = `我做了「你最适合哪座城市」性格测试，快来测测你的结果！`;
+  if (navigator.share) {
+    navigator.share({title:'城市性格测试', text}).catch(()=>{});
+  } else {
+    const el = document.createElement('textarea');
+    el.value = text;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    alert(`已复制分享文案，去${platform}粘贴分享吧！`);
+  }
+}
+
+function retryQuiz() {
+  current = 0;
+  answers = new Array(40).fill(null);
+  scores = [0,0,0,0,0];
+  document.getElementById('result').style.display = 'none';
+  document.getElementById('quiz').style.display = 'block';
+  renderQuestion(0);
+}
+</script>
+</body>
+</html>
